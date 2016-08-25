@@ -108,9 +108,8 @@ def ensure_dir(dirname):
     """
     try:
         os.makedirs(dirname)
-    except OSError, e:
-        if e.errno != errno.EEXIST:
-            raise
+    except:
+        pass
     
     
 def init_dl(h, all, headers):
