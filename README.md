@@ -1,6 +1,10 @@
 # vk_share
 A script that lets you automatically synchronize and share audio playlists from vk.com
 
+## Prerequisites
+Python 3.x (relatively recent is advised)
+Tornado in pythonpath
+
 ## Configuration file
 For this script to function correctly, a configuration file is required.
 The default name for this file is vsh.cfg, but you can specify different
