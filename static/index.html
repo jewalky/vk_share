@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>VK shared</title>
+		<style>
+			*::selection
+            {
+				background:transparent;
+			}
+
+			*::-moz-selection
+            {
+				background:transparent;
+			}
+
+			*::-webkit-selection
+            {
+				background:transparent;
+			}
+			
+			body
+			{
+				font-family: Arial,FreeSans;
+				font-size: 10pt;
+				background-color: black;
+			}
+			
+			.loader_outer
+			{
+				display: block;
+				position: fixed;
+				left: 0;
+				right: 0;
+				top: 0;
+				bottom: 0;
+				width: 100%;
+				height: 100%;
+				text-align: center;
+			}
+			
+			.loader_inner
+			{
+				margin-top: 64px;
+			}
+			
+			div.audio_row
+			{
+				margin: 4px;
+				padding: 4px;
+				padding-left: 8px;
+				color: white;
+				background-color: rgb(64, 64, 64);
+				border-radius: 2px;
+				cursor: pointer;
+			}
+			
+			div.audio_row:hover
+			{
+				background-color: rgb(80, 80, 80);
+			}
+			
+			div.audio_row_playing, div.audio_row_playing:hover
+			{
+				background-color: rgb(112, 112, 112);
+			}
+			
+			div#player_controls, div#player_noplaying
+			{
+				position: fixed;
+				left: 0;
+				right: 0;
+				top: 0;
+				height: 100px;
+				overflow: hidden;
+				padding: 8px;
+			}
+			
+			div#player_playlist
+			{
+				position: fixed;
+				left: 0;
+				right: 0;
+				top: 100px;
+				bottom: 0;
+				overflow-x: hidden;
+				overflow-y: scroll;
+			}
+			
+			div#player_noplaying
+			{
+				text-align: center;
+				font-size: 30pt;
+				color: rgb(192, 192, 192);
+				padding-top: 24px;
+			}
+			
+			a.button_control
+			{
+				display: inline-block;
+				width: 24px;
+				height: 24px;
+				border-radius: 3px;
+				background-color: rgb(32, 32, 32);
+				opacity: 0.6;
+			}
+			
+			a.button_control:hover, a.ci_repeat_on, a.ci_random_on, a.ci_favorites_on
+			{
+				opacity: 1.0;
+			}
+			
+			a.ci_play { background-image: url(./static/pi_play.png); }
+			a.ci_pause { background-image: url(./static/pi_pause.png); }
+			a.ci_stop { background-image: url(./static/pi_stop.png); }
+			a.ci_favorites, a.ci_star { background-image: url(./static/pi_star.png); }
+            a.ci_link { background-image: url(./static/pi_link.png); }
+			
+			a.ci_link
+			{
+				display: inline-block;
+				width: 16px;
+				height: 16px;
+				opacity: 0.5;
+			}
+            
+            a.ci_link:hover
+            {
+                opacity: 1.0;
+            }
+            
+			a.ci_star
+			{
+				display: inline-block;
+				width: 20px;
+				height: 20px;
+				opacity: 0.5;
+			}
+			
+			a.ci_star_on, a.ci_star:hover
+			{
+				opacity: 1.0;
+			}
+			
+			a.ci_repeat
+			{
+				background-image: url(./static/pi_repeat.png);
+				border-radius: 4px 0px 0px 4px;
+				margin-right: 0;
+			}
+			
+			a.ci_random
+			{
+				background-image: url(./static/pi_random.png);
+				border-radius: 0px 4px 4px 0px;
+				margin-left: 0;
+			}
+			
+			a.ci_prev
+			{
+				background-image: url(./static/pi_backward.png);
+				border-radius: 4px 0px 0px 4px;
+				margin-right: 0;
+			}
+			
+			a.ci_next
+			{
+				background-image: url(./static/pi_forward.png);
+				border-radius: 0px 4px 4px 0px;
+				margin-right: 0;
+			}
+			
+			div.player_nowplaying
+			{
+				padding: 2px;
+				color: white;
+			}
+			
+			div.player_nowplaying i
+			{
+				opacity: 0.5;
+			}
+			
+			div.timeline
+			{
+				margin-bottom: 6px;
+			}
+			
+			div.timeline_total
+			{
+				width: 100%;
+				height: 4px;
+				background-color: rgb(64, 64, 64);
+				border-radius: 2px;
+			}
+			
+			div.timeline_seeker
+			{
+				padding-top: 5px;
+				padding-bottom: 5px;
+				cursor: pointer;
+			}
+			
+			div#timeline_time, div#timeline_totaltime
+			{
+				margin: 2px;
+				margin-top: 0;
+				color: rgb(204, 204, 204);
+			}
+			
+			div#timeline_progress, div#sound_volume
+			{
+				background-color: rgb(192, 192, 192);
+				height: 4px;
+				border-radius: 2px;
+			}
+			
+			#pc_title::selection, #pc_artist::selection
+			{
+				background-color: rgb(192, 192, 192);
+			}
+			
+			div.sound_div
+			{
+				margin-left: 16px;
+				display: inline-block;
+				height: 24px;
+				width: 128px;
+			}
+			
+			img.pi_sound_icon
+			{
+				width: 24px;
+				height: 24px;
+				opacity: 0.5;
+			}
+			
+			a.whatsthis
+			{
+				font-size: 13px;
+				padding: 2px;
+				padding-left: 12px;
+				padding-right: 12px;
+				opacity: 0.8;
+				display: block;
+				float: right;
+				color: white;
+				text-decoration: none;
+				background-color: rgb(32, 32, 32);
+				border-radius: 3px;
+			}
+			
+			a.whatsthis:hover
+			{
+				opacity: 1.0;
+				cursor: pointer;
+			}
+			
+			div#screen_area
+			{
+				z-index: 0;
+			}
+			
+			div#whatsthis_area
+			{
+				z-index: 1;
+				background-color: rgba(0, 0, 0, 0.8);
+				position: fixed;
+				left: 0;
+				right: 0;
+				top: 0;
+				bottom: 0;
+				width: 100%;
+				height: 100%;
+				cursor: pointer;
+			}
+			
+			div#whatsthis
+			{
+				position: fixed;
+				left: calc(50% - 160px);
+				top: calc(40% - 70px);
+				width: 360px;
+				height: 110px;
+				background-color: black;
+				border: 1px solid rgb(32, 32, 32);
+				border-radius: 5px;
+				padding: 16px;
+			}
+			
+			div#whatsthis h2
+			{
+				font-weight: normal;
+				font-size: 16pt;
+				color: white;
+				margin: 0;
+			}
+			
+			div#whatsthis p
+			{
+				color: rgb(192, 192, 192);
+			}
+			
+			div#whatsthis a
+			{
+				color: white;
+				text-decoration: underline;
+			}
+			
+			div#whatsthis a:hover
+			{
+				text-decoration: none;
+			}
+		</style>
+		<script type="text/javascript" language="JavaScript" src="./static/jquery.js"></script>
+        <script type="text/javascript" language="JavaScript" src="./static/sprintf.js"></script>
+		<script>
+			var g_All = [];
+		
+			function cEl(id)
+			{
+				return document.getElementById(id);
+			}
+			
+			var g_UserID = 0;
+			var g_CurrentID = 0;
+			var g_CurrentData = null;
+			var g_CurrentCtl = null;
+			
+			var g_Repeat = false;
+			var g_Random = false;
+			var g_Favorites = false;
+			
+			/**
+			 * Returns a random number between min and max
+			 */
+			function getRandomArbitary(min, max)
+			{
+				return Math.random() * (max - min) + min;
+			}
+
+			/**
+			 * Returns a random integer between min and max
+			 * Using Math.round() will give you a non-uniform distribution!
+			 */
+			function getRandomInt(min, max)
+			{
+				return Math.floor(Math.random() * (max - min + 1)) + min;
+			}
+			
+			function formatTime(time)
+			{
+				var sec_num = Math.floor(time);
+				var hours   = Math.floor(sec_num / 3600);
+				var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+				var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+				if (hours   < 10) {hours   = "0"+hours;}
+				if (minutes < 10) {minutes = "0"+minutes;}
+				if (seconds < 10) {seconds = "0"+seconds;}
+				var time    = ((hours > 0) ? hours+':' : '')+minutes+':'+seconds;
+				return time;
+			}
+			
+			function playerStatus()
+			{
+				if (g_CurrentCtl != null && g_CurrentData != null)
+				{
+                    cEl(sprintf("row%d_%d", g_CurrentData[0], g_CurrentData[1])).className = "audio_row audio_row_playing";
+                
+					var time_passed = g_CurrentCtl.currentTime;
+					var time_total = g_CurrentData[3];
+					
+					var time_percents = time_passed / time_total * 100.0;
+					
+					var time_percents_el = cEl("timeline_progress");
+					if (time_percents_el.style.width != time_percents+'%')
+						time_percents_el.style.width = time_percents+'%';
+					
+					var time_passed_fmt = formatTime(time_passed);
+					var time_passed_el = cEl("timeline_time");
+					if (time_passed_el.innerHTML != time_passed_fmt)
+						time_passed_el.innerHTML = time_passed_fmt;
+					
+					window.localStorage['nowPlayingId'] = g_CurrentID;
+					window.localStorage['nowPlayingPos'] = g_CurrentCtl.currentTime;
+				}
+				
+				//window.requestAnimationFrame(playerStatus);
+                setTimeout(playerStatus, 80);
+			}
+			
+			function player_random()
+			{
+				var newSong = getRandomInt(0, g_All.length-1);
+				player_play(g_All[newSong][1]);
+			}
+			
+			function player_prev(check)
+			{
+				if (g_CurrentCtl == null || !g_CurrentID)
+					return;
+			
+				if (g_Random && check)
+				{
+					player_random();
+					return;
+				}
+				
+				var song_current = g_CurrentID;
+				var song_next = null;
+				for (i = 0; i < g_All.length; i++)
+				{
+					if (g_All[i][1] == song_current)
+					{
+						if (i-1 > 0)
+							song_next = g_All[i-1];
+						else song_next = g_All[g_All.length];
+					}
+				}
+				
+				if (song_next == null)
+					song_next = g_All[0];
+				
+				if (!g_CurrentCtl.paused)
+				{
+					g_CurrentCtl.pause();
+					window.localStorage['nowPlayingPause'] = true;
+				}
+				player_play(song_next[1]);
+			}
+			
+			function player_next(check)
+			{
+				if (g_CurrentCtl == null || !g_CurrentID)
+					return;
+			
+				if (g_Random && check)
+				{
+					player_random();
+					return;
+				}
+			
+				var song_current = g_CurrentID;
+				var song_next = null;
+				// check for favorites
+				if (g_Favorites)
+				{
+					for (i = 0; i < g_All.length; i++)
+					{
+						if (g_All[i][1] == song_current)
+						{
+							// in case we switched to favorites mode, but the song currently played is NOT in favorites list
+							if (!g_All[i][20])
+							{
+								for (j = 0; j < g_All.length; j++)
+								{
+									if (g_All[j][20])
+									{
+										song_next = g_All[j];
+										break;
+									}									
+								}
+							}
+							else
+							{
+								var index = 0;
+								for (j = 0; j < g_All.length+i; j++)
+								{
+									index = j;
+									if (j >= g_All.length)
+										index -= g_All.length;
+									if (g_All[index][20])
+										song_next = g_All[index];
+								}
+							}
+							
+							if (song_next == null)
+								player_stop();
+							break;
+						}
+					}
+				}
+				else
+				{
+					for (i = 0; i < g_All.length; i++)
+					{
+						if (g_All[i][1] == song_current)
+						{
+							if (i+1 < g_All.length)
+								song_next = g_All[i+1];
+							else song_next = g_All[0];
+						}
+					}
+				}
+				
+				if (song_next == null)
+					song_next = g_All[0];
+				
+				if (!g_CurrentCtl.paused)
+				{
+					g_CurrentCtl.pause();
+					window.localStorage['nowPlayingPause'] = true;
+				}
+				player_play(song_next[1]);
+			}
+			
+			function player_favorites(favorites)
+			{
+				for (i = 0; i < g_All.length; i++)
+				{
+					el = cEl(sprintf("row%d_%d", g_All[i][0], g_All[i][1]));
+					if (el == null)
+						continue;
+					if (!g_All[i][20] && favorites)
+						el.style.display = 'none';
+					else el.style.display = 'block';
+				}
+			}
+			
+			function player_togglefavorites()
+			{
+				g_Favorites = !g_Favorites;
+				cEl("ci_favorites").className = "button_control ci_favorites"+(g_Favorites ? " ci_favorites_on" : "");
+				player_favorites(g_Favorites);
+				window.localStorage['nowPlayingFavorites'] = g_Favorites;
+			}
+			
+			function player_togglefavorite(pthis, ev, id)
+			{
+				for (i = 0; i < g_All.length; i++)
+				{
+					if (g_All[i][1] == id)
+					{
+						if (g_All[i][20] == null)
+							g_All[i][20] = false;
+						g_All[i][20] = !g_All[i][20];
+						pthis.className = "ci_star"+(g_All[i][20] ? " ci_star_on" : "");
+						break;
+					}
+				}
+				
+				//window.localStorage['all'] = JSON.stringify(g_All);
+			}
+            
+			function player_play(id, callback)
+			{
+				if (g_CurrentData != null)
+				{
+					cEl(sprintf("row%d_%d", g_CurrentData[0], g_CurrentData[1])).className = "audio_row";
+					g_CurrentData = null;
+				}
+				
+				var song = null;
+				for (i = 0; i < g_All.length; i++)
+				{
+					if (g_All[i][1] == id)
+					{
+						song = g_All[i];
+						break;
+					}
+				}
+				
+				if (song == null)
+					return;
+				
+				cEl("pc_artist").innerHTML = song[4];
+				cEl("pc_title").innerHTML = song[5];
+				
+				cEl("player_controls").style.display = "block";
+				cEl("player_noplaying").style.display = "none";
+				
+				g_CurrentID = id;
+				g_CurrentData = song;
+
+				var htmlrow = jQuery('#'+sprintf("row%d_%d", g_CurrentData[0], g_CurrentData[1]));
+                htmlrow[0].className = "audio_row audio_row_playing";
+                var htmlplaylist = jQuery('#player_playlist');
+                // check if row is visible, scroll only if not.
+                var rec = [htmlrow.position().top, htmlrow.height()];
+                if (rec[0]+rec[1] < 0 || rec[0] > htmlplaylist.height())
+                    htmlplaylist.scrollTop(htmlrow.position().top+htmlplaylist.scrollTop()-htmlplaylist.height()/2+htmlrow.height()/2);
+				
+				var ctl = cEl("ctl");
+				$(ctl).unbind().on('loadedmetadata', function()
+					{
+						if (callback != null)
+						{
+							callback(this);
+							return;
+						}
+						
+						window.localStorage['nowPlayingPause'] = false;
+						this.currentTime = 0;
+						this.play();
+					}).on('ended', function()
+					{
+						if (g_Repeat || g_All.length <= 1)
+						{
+							// repeat current track
+							if (!g_CurrentCtl.paused)
+								g_CurrentCtl.pause();
+							g_CurrentCtl.currentTime = 0;
+							g_CurrentCtl.play();
+						}
+						else
+						{
+							if (!g_Random)
+							{
+								// advance to next track
+								player_next();
+							}
+							else
+							{
+								// advance to random track
+								player_random();
+							}
+						}
+					});
+				ctl.src = song[2];
+				
+				cEl("timeline_totaltime").innerHTML = formatTime(song[3]);
+				cEl("ci_play").className = "button_control ci_pause";
+			}
+			
+			function player_togglepause()
+			{
+				if (g_CurrentCtl == null || g_CurrentCtl.ended)
+					return;
+				
+				if (g_CurrentCtl.paused)
+				{
+					g_CurrentCtl.play();
+					cEl("ci_play").className = "button_control ci_pause";
+					window.localStorage['nowPlayingPause'] = false;
+				}
+				else
+				{
+					g_CurrentCtl.pause();
+					cEl("ci_play").className = "button_control ci_play";
+					window.localStorage['nowPlayingPause'] = true;
+				}
+			}
+			
+			function player_stop()
+			{
+				if (g_CurrentCtl == null)
+					return;
+			
+				cEl("ci_play").className = "button_control ci_play";
+				g_CurrentCtl.pause();
+				g_CurrentCtl.currentTime = 0;
+				window.localStorage['nowPlayingPause'] = true;
+			}
+			
+			function player_togglerepeat(check)
+			{
+				g_Repeat = !g_Repeat;
+				cEl("ci_repeat").className = "button_control ci_repeat"+(g_Repeat ? " ci_repeat_on" : "");
+				if (g_Random && check)
+					player_togglerandom();
+				window.localStorage['nowPlayingRepeat']=g_Repeat;
+			}
+			
+			function player_togglerandom(check)
+			{
+				g_Random = !g_Random;
+				cEl("ci_random").className = "button_control ci_random"+(g_Random ? " ci_random_on" : "");
+				if (g_Repeat && check)
+					player_togglerepeat();
+				window.localStorage['nowPlayingRandom']=g_Random;
+			}
+			
+			function player_playlistEnded()
+			{
+				console.log("playlist ended");
+			}
+			
+			function player_seek(pthis, ev)
+			{
+				if (g_CurrentData == null || g_CurrentCtl == null)
+					return;
+			
+				var mTTL = pthis.getBoundingClientRect();
+				var mX = ev.pageX-mTTL.left;
+				
+				var new_time = mX / mTTL.width * g_CurrentData[3];
+				g_CurrentCtl.currentTime = new_time;
+			}
+			
+			function player_sound(pthis, ev, wut_do)
+			{
+				if (g_CurrentData == null || g_CurrentCtl == null)
+					return;
+			
+				if (wut_do == 1)
+				{
+					pthis.holding = true;
+					document.body.onmouseup = function(event)
+						{
+							player_sound(pthis, event, -1);
+						};
+				}
+				else if (wut_do == 0 && !pthis.holding)
+					return;
+				else if (wut_do == -1)
+				{
+					pthis.holding = false;
+					return;
+				}
+			
+				var mTTL = pthis.getBoundingClientRect();
+				var mX = ev.pageX-mTTL.left;
+				
+				var sVal = mX / mTTL.width;
+				g_CurrentCtl.volume = sVal;
+				window.localStorage['soundVolume'] = sVal;
+				cEl("sound_volume").style.width = (sVal*100.0)+'%';
+			}
+			
+            var g_InitialPlayed = false;            
+			function initAll(data, ls)
+			{
+				cEl("player_playlist").innerHTML = '';
+			
+				og_All = g_All;
+				g_All = data;
+				g_All['date'] = (new Date().getTime());
+				
+				// populate the list.
+				for (i = 0; i < g_All.length; i++)
+				{
+					if (og_All != null && og_All.length > 0)
+					{
+						for (j = 0; j < og_All.length; j++)
+						{
+							if (og_All[j][1] == g_All[i][1])
+							{
+								g_All[i][20] = og_All[j][20];
+								if (g_All[i][20] === null)
+									g_All[i][20] = false;
+								break;
+							}
+						}
+					}
+				
+                    var id2 = g_All[i][0]*1;
+                    var id1 = g_All[i][1]*1;
+					g_All[i][0] = id1;
+					g_All[i][1] = id2;
+                    var time = g_All[i][5]*1;
+					g_All[i][5] = g_All[i][3];
+                    g_All[i][3] = time;
+					
+					if (g_UserID == 0)
+						g_UserID = g_All[i][0];
+					
+					var el_audio_row = document.createElement('div');
+					el_audio_row.id = sprintf("row%d_%d", g_All[i][0], g_All[i][1]);
+					el_audio_row.className = "audio_row";
+					el_audio_row.sId = g_All[i][1];
+					el_audio_row.style.position = 'relative';
+					el_audio_row.onclick = function(ev)
+						{
+							if (ev.target == this.sFav || ev.target == this.sLink)
+								return false;
+							player_play(this.sId);
+						};
+					
+					var el_audio_row_name = document.createElement('span');
+					el_audio_row_name.innerHTML = '<b>'+g_All[i][4]+'</b> &mdash; '+g_All[i][5];
+					
+					var el_audio_row_time = document.createElement('span');
+					el_audio_row_time.style.position = 'absolute'; // idk somehow fixes Firefox
+					el_audio_row_time.style.right = '8px';
+					el_audio_row_time.innerHTML = "&nbsp;&nbsp;"+formatTime(g_All[i][3]);
+					
+                    var el_audio_row_link = document.createElement('a');
+                    el_audio_row_link.className = 'ci_link';
+                    el_audio_row_link.sId = g_All[i][1];
+                    el_audio_row_link.onclick = function(ev)
+                        {
+                            prompt('Link:', window.location.href.split('#')[0]+'#play='+this.sId);
+                        };
+                    el_audio_row_link.style.position = 'absolute';
+                    el_audio_row_link.style.right = '84px';
+                    el_audio_row_link.style.top = '4px';
+                    el_audio_row.sLink = el_audio_row_link;
+                    
+					var el_audio_row_star = document.createElement('a');
+					el_audio_row_star.className = 'ci_star'+(g_All[i][20] ? ' ci_star_on' : '');
+					el_audio_row_star.sId = g_All[i][1];
+					el_audio_row_star.onclick = function(ev)
+						{
+							player_togglefavorite(this, ev, this.sId);
+						};
+					el_audio_row_star.style.position = 'absolute';
+					el_audio_row_star.style.right = '60px';
+					el_audio_row_star.style.top = '1px';
+					el_audio_row.sFav = el_audio_row_star;
+					
+					el_audio_row.appendChild(el_audio_row_name);
+					el_audio_row.appendChild(el_audio_row_time);
+                    el_audio_row.appendChild(el_audio_row_link);
+					el_audio_row.appendChild(el_audio_row_star);
+					cEl("player_playlist").appendChild(el_audio_row);
+				}
+				
+				cEl("player_loading").style.display = "none";
+				cEl("player").style.display = "block";
+				
+				player_favorites(g_Favorites);
+                
+                if (!g_InitialPlayed)
+                {
+                    var parms = get_url_parms();
+                    if (parms.play != null)
+                    {
+                        window.localStorage['nowPlayingId'] = parms.play;
+                        window.localStorage['nowPlayingPos'] = '0';
+                        window.localStorage['nowPlayingPause'] = 'false';
+                        window.localStorage['nowPlayingRepeat'] = 'true';
+                        window.localStorage['nowPlayingRandom'] = 'false';
+                        window.localStorage['nowPlayingFavorites'] = 'false';
+                        window.location.href = window.location.href.split('#')[0]+'#';
+                    }
+                    
+                    restoreFromLocalStorage();
+                }
+			}
+			
+			function pullAudios()
+			{
+				g_CurrentCtl = cEl("ctl");
+				g_CurrentCtl.volume = window.localStorage['soundVolume']*1;
+                $.ajax({
+						url: "./pull",
+						success: function(data)
+							{
+								initAll(data);
+								//window.localStorage['all'] = JSON.stringify(g_All);
+							},
+						dataType: "json"
+					});
+			}
+			
+			function whatsthis()
+			{
+				jQuery("#whatsthis_area").css("display", "block");
+				jQuery("#whatsthis_area").animate({opacity: 1.0});
+			}
+			
+			function remove_whatsthis()
+			{
+				jQuery("#whatsthis_area").css("display", "none");
+				jQuery("#whatsthis_area").css("opacity", 0.0);
+			}
+            
+            function get_url_parms()
+            {
+                var ss = window.location.href.split('#');
+                if (ss.length < 2)
+                    return {};
+                ss = ss.slice(1).join('#').split('&');
+                var out = {};
+                for (var i = 0; i < ss.length; i++)
+                {
+                    var arg = ss[i].split('=');
+                    var arg_name = arg[0].toLowerCase();
+                    var arg_value = decodeURIComponent(arg.slice(1).join('='));
+                    out[arg_name] = arg_value;
+                }
+                return out;
+            }
+			
+            function restoreFromLocalStorage()
+            {
+				if (window.localStorage['nowPlayingId'] != null &&
+					window.localStorage['nowPlayingPos'] != null &&
+					window.localStorage['nowPlayingPause'] != null &&
+					window.localStorage['nowPlayingRepeat'] != null &&
+					window.localStorage['nowPlayingRandom'] != null &&
+					window.localStorage['nowPlayingFavorites'] != null)
+				{
+                    var c_id = window.localStorage['nowPlayingId']*1;
+                    var c_pos = window.localStorage['nowPlayingPos']*1;
+                    var c_pause = window.localStorage['nowPlayingPause']=='true';
+                    var c_repeat = window.localStorage['nowPlayingRepeat']=='true';
+                    var c_random = window.localStorage['nowPlayingRandom']=='true';
+                    var c_fav = window.localStorage['nowPlayingFavorites']=='true';
+                    
+                    player_play(c_id, function(pthis)
+                        {
+                            pthis.currentTime = c_pos;
+                            if (c_pause && !pthis.paused)
+                                pthis.pause();
+                            else if (!c_pause && pthis.paused)
+                                pthis.play();
+                            g_Repeat = c_repeat;
+                            cEl("ci_repeat").className = "button_control ci_repeat"+(g_Repeat ? " ci_repeat_on" : "");
+                            g_Random = c_random;
+                            cEl("ci_random").className = "button_control ci_random"+(g_Random ? " ci_random_on" : "");
+                            g_Favorites = c_fav;
+                            cEl("ci_favorites").className = "button_control ci_favorites"+(g_Favorites ? " ci_favorites_on" : "");
+                        });
+
+				}
+				else
+				{
+					window.localStorage['nowPlayingId']=0;
+					window.localStorage['nowPlayingPos']=0;
+					window.localStorage['nowPlayingPause']=true;
+					window.localStorage['nowPlayingRepeat']=false;
+					window.localStorage['nowPlayingRandom']=false;
+					window.localStorage['nowPlayingFavorites']=false;
+				}
+            }
+            
+			window.onload = function()
+			{
+				var sVal = window.localStorage['soundVolume'];
+				if (sVal == null)
+				{
+					sVal = 0.75;
+					window.localStorage['soundVolume'] = sVal;
+				}
+				
+				cEl("sound_volume").style.width = (sVal*100.0)+'%';
+				
+				//if (window.localStorage['all'] != null)
+				//	initAll(JSON.parse(window.localStorage['all']));
+				
+				pullAudios();
+				window.requestAnimationFrame(playerStatus);
+			};
+		</script>
+	</head>
+	<body>
+		<audio id="ctl" style="display: none"></audio>
+		<div id="screen_area">
+			<div id="player_loading" class="loader_outer">
+				<img class="loader_inner" src="./static/ajax-loader.gif" alt="#" />
+			</div>
+			<div id="player" style="display: none">
+				<div id="player_noplaying">
+					No file is currently played.
+				</div>
+				<div id="player_controls" style="display: none">
+					<div class="player_nowplaying">
+						<i>Now playing:</i> <strong id="pc_artist"></strong> &mdash; <span id="pc_title"></span>
+					</div>
+					<div class="timeline">
+						<div class="timeline_seeker" onmousedown="player_seek(this, event); return false;">
+							<div class="timeline_total">
+								<div id="timeline_progress"></div>
+							</div>
+						</div>
+						<div style="float: left;" id="timeline_time">00:00</div>
+						<div style="float: right;" id="timeline_totaltime">00:00</div>
+						<div style="clear: both;"></div>
+					</div>
+					<a href="#" id="ci_play" class="button_control ci_play" onclick="player_togglepause(); return false;"></a>
+					<a href="#" class="button_control ci_stop" onclick="player_stop(); return false;"></a>
+					<a href="#" id="ci_repeat" class="button_control ci_repeat" onclick="player_togglerepeat(true); return false;"></a><a href="#" id="ci_random" class="button_control ci_random" onclick="player_togglerandom(true); return false;"></a>
+					<a href="#" class="button_control ci_prev" onclick="player_prev(true); return false;"></a><a href="#" class="button_control ci_next" onclick="player_next(true); return false;"></a>
+					<a href="#" id="ci_favorites" class="button_control ci_favorites" onclick="player_togglefavorites(); return false;"></a>
+					<div class="sound_div">
+						<img src="./static/pi_sound.png" class="pi_sound_icon" alt="#" />
+						<div class="timeline_seeker" onmousedown="player_sound(this, event, 1); return false;" onmousemove="player_sound(this, event, 0); return false;" style="width: 96px; float: right; margin-top: 6px">
+							<div class="timeline_total">
+								<div id="sound_volume"></div>
+							</div>
+						</div>
+					</div>
+					<a class="whatsthis" onclick="whatsthis(); return false;" href="#">What's this?</a>
+				</div>
+				<div id="player_playlist">
+				</div>
+			</div>
+		</div>
+		<div id="whatsthis_area" onclick="remove_whatsthis(); return false;" style="opacity: 0.0; display: none">
+			<div id="whatsthis">
+				<h2>VK shared</h2>
+				<p>A script that maintains guest access to <a href="http://vk.com/" onclick="window.location.href = 'http://vk.com/'; event.stopPropagation();">vk.com</a> playlists.</p>
+				<p style="margin-left: 16px">&copy; 2014-2016 ZZYZX</p>
+			</div>
+		</div>
+	</body>
+</html>

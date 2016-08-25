@@ -1,0 +1,1 @@
+c:\python35\python vsh.py -cfg ../vsh.cfg
