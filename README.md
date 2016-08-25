@@ -17,3 +17,7 @@ source=163837192
 
 Where login and passwords are your vk.com login and password, and source
 is an user (positive) or group (negative) ID to fetch the playlist from.
+
+Once these settings are configured, every new added track will be downloaded
+and stored in ./static/music directory.
+Removed tracks are removed from the playlist, but left on HDD.
