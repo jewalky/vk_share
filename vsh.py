@@ -16,6 +16,7 @@ import re
 import urllib.parse
 import os
 from configparser import ConfigParser
+import vkunmask
 
 g_All = []
 
@@ -138,6 +139,10 @@ def init_dl(h, all, headers):
                     if ll >= 0:
                         audios = audios[:ll]
                     audio = json.loads(audios.replace("'", "\"").replace("\\x", "\\u00"))[0]
+                    # update 15.03.17
+                    if 'audio_api_unavailable' in audio[2]:
+                        extra = audio[2].split('?extra=')[1]
+                        audio[2] = vkunmask.vkunmask(extra)
                     printf("init_dl(): Downloading %s to %s\n", audio[2], localname)
                     r,c = h.request(audio[2], 'GET')
                     with open(localname, 'wb') as f:
@@ -155,8 +160,10 @@ def VkPullThread(config):
 
     h = httplib2.Http()
     
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36',
-               'Upgrade-Insecure-Requests': '1'}
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36',
+               'Upgrade-Insecure-Requests': '1',
+               'X-Requested-With': 'XMLHttpRequest',
+               'Origin': 'https://vk.com'}
     
     while not config.exiting:
         printf("VkPullThread(): Connecting/logging in...\n")
@@ -209,11 +216,13 @@ def VkPullThread(config):
                     sleep(60.0)
                     break
                 else:
-                    audios = audios[1].replace("'", "\"").replace("\\x", "\\u00")
+                    audios = audios[1].split("<!>")
+                    audios = audios[0].replace("'", "\"").replace("\\x", "\\u00")
                     g_All = json.loads(audios)['list']
                     init_dl(h, g_All, headers)
                     sleep(120.0)
             except:
+                #raise
                 # here it usually means that the connection was aborted or smth.
                 pass
 
@@ -255,4 +264,7 @@ settings = {"static_path": "static"}
 
 app = tornado.web.Application(handlers, **settings)
 app.listen(8192)
-tornado.ioloop.IOLoop.instance().start()
+try:
+    tornado.ioloop.IOLoop.instance().start()
+except KeyboardInterrupt:
+    tornado.ioloop.IOLoop.instance().stop()
