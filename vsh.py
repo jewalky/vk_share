@@ -206,7 +206,7 @@ def VkPullThread(config):
                                                 """
                 headers['Cookie'] = make_cookies(LC)
                 r,audios = h.request('https://vk.com/al_audio.php', 'POST', headers=headers,
-                            body=urllib.parse.urlencode({'act': 'load_silent', 'al': 1, 'album_id': -1, 'band': False, 'owner_id': g_UserID}))
+                            body=urllib.parse.urlencode({'act': 'load_section', 'al': 1, 'claim': 0, 'offset': 0, 'type': 'playlist', 'playlist_id': -1, 'owner_id': g_UserID}))
                 audios = audios.decode('windows-1251')
                 # audios looks like this.
                 # ?<!>?<!>?<!>?<!>{invalid json}
@@ -217,12 +217,14 @@ def VkPullThread(config):
                     break
                 else:
                     audios = audios[1].split("<!>")
-                    audios = audios[0].replace("'", "\"").replace("\\x", "\\u00")
+                    audios = audios[0].replace("'", "\"").replace("\\x", "\\u00").replace("\\/", "/") # fix broken escapes
+                    # fix broken tags (how does it even work with vk itself?)
+                    audios = re.sub(r'url\("([^"]*)"\)', 'url(\'\\1\')', audios)
                     g_All = json.loads(audios)['list']
                     init_dl(h, g_All, headers)
                     sleep(120.0)
             except:
-                #raise
+                raise
                 # here it usually means that the connection was aborted or smth.
                 pass
 
